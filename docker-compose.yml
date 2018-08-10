@@ -1,0 +1,51 @@
+version: '2'
+
+services:
+  app:
+    build:
+      context: ./kino
+      args:
+        ENV2BUILD: dev
+    restart: unless-stopped
+    volumes:
+      - "/usr/bin/docker:/usr/bin/docker"
+      - "/usr/local/bin/docker-compose:/usr/local/bin/docker-compose"
+      - "/vagrant/kino:/usr/src/app"
+#      - "/data/share:/data/nfs"
+#      - "/vagrant/kino/media:/media"
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: 'True'
+      ADMIN_USER: admin
+      ADMIN_EMAIL: admin@visiativ.com
+      ADMIN_PASSWORD: manager
+      DB_HOST: dbkino
+      DB_NAME: kino
+      DB_USER: admin
+      DB_PASS: manager
+      LOG_LEVEL: DEBUG
+      HOST_NAME: "192.168.0.200"
+    extra_hosts:
+      - "kino.dev:192.168.0.200"
+      - "kino:192.168.0.200"
+    depends_on:
+      - dbkino
+  dbkino:
+    restart: unless-stopped
+    image: dregistry.visiativ.moovapps.com/mysql-prod:5.6
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: admin
+      MYSQL_PASS: manager
+      ON_CREATE_DB: kino
+  phpmyadmin:
+    restart: unless-stopped
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOSTS: dbkino
+    depends_on:
+      - dbkino
